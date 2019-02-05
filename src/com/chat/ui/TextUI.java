@@ -9,11 +9,13 @@ import com.chat.client.CommunicationHelper;
 
 public class TextUI implements UI {
     Scanner sc = new Scanner(System.in);
-    CommunicationHelper helper;
+    CommunicationHelper helper = new CommunicationHelper();
     ChatClient client = new ChatClientImpl(this);
     String message;
+    String name;
 
     public TextUI() {  	
+ 
     }
     
     public TextUI(CommunicationHelper helper) {
@@ -21,16 +23,16 @@ public class TextUI implements UI {
         helper.rmiSetup(this);
     }
 
-    @Override
-    public void publishMessageToUI(String message) {
-        System.out.println(message);
+
+    public void displayMessage(String input) {
+        System.out.println(input);
     }
 
-    @Override
-    public void getInputFromUI(String name) {
+
+    public void startChat() {
         System.out.println("Type 'menu' for more options.");
-        System.out.print(name + ": ");
         while (true) {
+            System.out.print(name + ": ");
             message = sc.nextLine().trim();
 
             try {
@@ -46,22 +48,20 @@ public class TextUI implements UI {
     }
 
     @Override
-    public UI getUIType() {
-        return new TextUI();
-    }
-
-    @Override
     public String getUsername() {
         System.out.print("Welcome to the chat application! Enter name to begin: ");
-        return sc.nextLine();
+        name = sc.nextLine().trim();
+        startChat();
+        return name;
     }
 
-    public void displayMenu() throws RemoteException {
+    private void displayMenu() throws RemoteException {
         System.out.println("Options");
         System.out.println("==========");
         System.out.println("1. List Registered Users");
         System.out.println("2. Private Message");
-        System.out.println("3. Exit");
+        System.out.println("3. Return to Chat");
+        System.out.println("4. Exit");
         int option = sc.nextInt();
         switch (option) {
         case 1:
@@ -74,6 +74,9 @@ public class TextUI implements UI {
         	privateMessage();
             break;
         case 3:
+        	startChat();
+        	break;
+        case 4:
         	System.exit(0);
         }
     }

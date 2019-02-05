@@ -9,8 +9,8 @@ public class ChatClientImpl implements ChatClient {
         this.uiType = uiType;
     }
 
-    public void display(String message) {
-        uiType.publishMessageToUI(message);
+    public void receive(String message) {
+        uiType.displayMessage(message);
     }
 
 }

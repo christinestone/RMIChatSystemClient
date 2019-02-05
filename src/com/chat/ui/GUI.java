@@ -7,22 +7,27 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.rmi.RemoteException;
+import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.ListModel;
 import javax.swing.border.Border;
+
+import com.chat.apis.ChatClient;
+import com.chat.client.ChatClientImpl;
+import com.chat.client.CommunicationHelper;
 
 public class GUI extends JFrame implements ActionListener, UI {
 
+	private static final long serialVersionUID = 1L;
 	private static final Border CREATE_EMPTY_BORDER = BorderFactory.createEmptyBorder(10,10,10,10);
 	private JFrame frame;
 	private JTextField textField;
@@ -31,20 +36,21 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private JButton joinButton, sendButton, pmButton;
 	private String username, message;
 
+	CommunicationHelper helper;
+	ChatClient client = new ChatClientImpl(this);
+
+	Logger logger;
+
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-				try {
-					GUI window = new GUI();
-					window.frame.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		});
+		try {
+			GUI window = new GUI();
+			window.frame.setVisible(true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -54,12 +60,18 @@ public class GUI extends JFrame implements ActionListener, UI {
 		initialize();
 	}
 
+	public GUI(CommunicationHelper helper) {
+		initialize();
+		frame.setVisible(true);
+		this.helper = helper;
+	}
+
 	/**
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
 		//Create the frame
-		frame = new JFrame("Chat Frame");
+		frame = new JFrame("Chat Console");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(400, 400);
 
@@ -72,6 +84,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 		contentPane.add(outerPanel, BorderLayout.CENTER);
 		contentPane.add(getUsersPanel(), BorderLayout.WEST);
 
+		frame.add(contentPane);
 		frame.pack();
 		frame.setAlwaysOnTop(true);
 		frame.setLocation(150, 150);
@@ -79,26 +92,13 @@ public class GUI extends JFrame implements ActionListener, UI {
 
 	private JPanel getUsersPanel() {
 		userPanel = new JPanel(new BorderLayout());
-		
+
 		JLabel usersLabel = new JLabel("Active Users", JLabel.CENTER);
 		userPanel.add(usersLabel, BorderLayout.NORTH);
 		userPanel.setBorder(CREATE_EMPTY_BORDER);
 		userPanel.add(getButtonPanel(), BorderLayout.SOUTH);
-		getClientPanel();
+		//getClientPanel();
 		return userPanel;
-	}
-	
-	/**
-	 * builds JPanel to display list of active users 
-	 * @return clientPanel
-	 */
-	private void getClientPanel() {
-		JPanel clientPanel = new JPanel(new BorderLayout());
-		ListModel<String> listModel = new DefaultListModel<String>();
-		JList<String> list = new JList<String>(listModel);
-        JScrollPane listScrollPane = new JScrollPane(list);
-        clientPanel.add(listScrollPane, BorderLayout.CENTER);
-        userPanel.add(clientPanel, BorderLayout.CENTER);
 	}
 
 	/**
@@ -157,46 +157,55 @@ public class GUI extends JFrame implements ActionListener, UI {
 		return buttonPanel;
 	}
 
-
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == joinButton) {
-			username = textField.getText();
-			frame.setTitle(username + "'s console ");
+			setUsername(textField.getText());
 			textField.setText("");
-			textArea.append("username : " + username + " connecting to chat...\n");
+			joinButton.setEnabled(false);
+			sendButton.setEnabled(true);
+			textArea.append("\n" + username + " connecting to chat...\n");
+
+			helper.rmiSetup(this);
 		}
 		if (e.getSource() == sendButton) {
 			message = textField.getText();
 			textField.setText("");
-			textArea.append(username + ": " + message);
+			try {
+				helper.sendMessageToServer(username, message);
+			} catch (RemoteException e1) {
+				e1.printStackTrace();
+			}
 		}
 		if (e.getSource() == pmButton) {
-
+			/*
+			 * TO DO
+			 */
 		}
-
-	}
-
-	@Override
-	public void getInputFromUI(String name) {
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	public UI getUIType() {
-		return new GUI();
 	}
 
 	@Override
 	public String getUsername() {
+		if(username.length() != 0 ) {
+			frame.setTitle(username + "'s Console ");
+			textField.setText("");
+		}else{
+			checkUsername();
+		}
 		return username;
 	}
 
 	@Override
-	public void publishMessageToUI(String message) {
-		// TODO Auto-generated method stub
-		
+	public void displayMessage(String message) {
+		textArea.append("\n" + message);
 	}
 
+	private void checkUsername() {
+		JOptionPane.showMessageDialog(frame, "Enter your name to Start");
+		username = JOptionPane.showInputDialog("name");
+	}
+
+	private void setUsername(String username) {
+		this.username = username;
+	}
 }

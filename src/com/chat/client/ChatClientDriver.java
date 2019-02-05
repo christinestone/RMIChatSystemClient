@@ -10,12 +10,13 @@ public class ChatClientDriver {
 	static Scanner sc = new Scanner(System.in);
 	public static void main(String[] args) throws Exception, IOException {
 		CommunicationHelper helper = new CommunicationHelper();
-		System.out.println("Select from below:");
-		System.out.println("1. GUI\n2. Console");
-		if(sc.nextInt() == 1) {
+//		System.out.println("Select from below:");
+//		System.out.println("1. Console");
+//		System.out.println("2. GUI");
+//		if(sc.nextInt() == 1) {
+//			new TextUI(helper);		
+//		}else
 			new GUI(helper);
-		}else
-			new TextUI(helper);
 	}
 
 }

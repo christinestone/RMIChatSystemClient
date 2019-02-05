@@ -2,7 +2,6 @@ package com.chat.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Container;
-import java.awt.EventQueue;
 import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
@@ -21,12 +20,9 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
 
-import com.chat.apis.ChatClient;
-import com.chat.client.ChatClientImpl;
 import com.chat.client.CommunicationHelper;
 
 public class GUI extends JFrame implements ActionListener, UI {
-
 	private static final long serialVersionUID = 1L;
 	private static final Border CREATE_EMPTY_BORDER = BorderFactory.createEmptyBorder(10,10,10,10);
 	private JFrame frame;
@@ -37,29 +33,11 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private String username, message;
 
 	CommunicationHelper helper;
-	ChatClient client = new ChatClientImpl(this);
-
 	Logger logger;
-
-	/**
-	 * Launch the application.
-	 */
-	public static void main(String[] args) {
-		try {
-			GUI window = new GUI();
-			window.frame.setVisible(true);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 
 	/**
 	 * Create the application.
 	 */
-	public GUI() {
-		initialize();
-	}
-
 	public GUI(CommunicationHelper helper) {
 		initialize();
 		frame.setVisible(true);
@@ -70,7 +48,6 @@ public class GUI extends JFrame implements ActionListener, UI {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		//Create the frame
 		frame = new JFrame("Chat Console");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(400, 400);
@@ -90,6 +67,10 @@ public class GUI extends JFrame implements ActionListener, UI {
 		frame.setLocation(150, 150);
 	}
 
+	/**
+	 * builds JPanel for list of active users 
+	 * @return userPanel
+	 */
 	private JPanel getUsersPanel() {
 		userPanel = new JPanel(new BorderLayout());
 
@@ -164,6 +145,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 			textField.setText("");
 			joinButton.setEnabled(false);
 			sendButton.setEnabled(true);
+			frame.setTitle(username + "'s Console ");
 			textArea.append("\n" + username + " connecting to chat...\n");
 
 			helper.rmiSetup(this);
@@ -178,6 +160,8 @@ public class GUI extends JFrame implements ActionListener, UI {
 			}
 		}
 		if (e.getSource() == pmButton) {
+			message = textField.getText();
+			textField.setText("");
 			/*
 			 * TO DO
 			 */
@@ -185,19 +169,16 @@ public class GUI extends JFrame implements ActionListener, UI {
 	}
 
 	@Override
-	public String getUsername() {
-		if(username.length() != 0 ) {
-			frame.setTitle(username + "'s Console ");
-			textField.setText("");
-		}else{
-			checkUsername();
-		}
-		return username;
+	public void displayMessage(String message) {
+		textArea.append("\n" + message);
 	}
 
 	@Override
-	public void displayMessage(String message) {
-		textArea.append("\n" + message);
+	public String getUsername() {
+		if (username.length() == 0) {
+			checkUsername();
+		}
+		return username;
 	}
 
 	private void checkUsername() {

@@ -13,8 +13,7 @@ public class TextUI implements UI {
     ChatClient client = new ChatClientImpl(this);
     String message;
 
-    public TextUI() {
-    	
+    public TextUI() {  	
     }
     
     public TextUI(CommunicationHelper helper) {
@@ -29,7 +28,8 @@ public class TextUI implements UI {
 
     @Override
     public void getInputFromUI(String name) {
-        System.out.println("Type 'menu' for more options. \nEnter message: ");
+        System.out.println("Type 'menu' for more options.");
+        System.out.print(name + ": ");
         while (true) {
             message = sc.nextLine().trim();
 
@@ -45,7 +45,6 @@ public class TextUI implements UI {
         }
     }
 
-
     @Override
     public UI getUIType() {
         return new TextUI();
@@ -53,7 +52,7 @@ public class TextUI implements UI {
 
     @Override
     public String getUsername() {
-        System.out.print("Enter name: ");
+        System.out.print("Welcome to the chat application! Enter name to begin: ");
         return sc.nextLine();
     }
 
@@ -72,14 +71,15 @@ public class TextUI implements UI {
         	/*
         	 * TO DO : complete privateMessage() method
         	 */
+        	privateMessage();
             break;
         case 3:
         	System.exit(0);
-
         }
     }
 
     public void privateMessage() throws RemoteException {
+    	helper.getListOfRegisteredUsers();
         System.out.print("Select user to private message: ");
         String user = sc.next();
         System.out.print("Type message: ");

@@ -62,6 +62,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private void initialize() {
 		frame = new JFrame();
 		frame.setSize(400, 400);
+
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -74,7 +75,6 @@ public class GUI extends JFrame implements ActionListener, UI {
 				}     
 			}
 		});
-
 
 		JPanel outerPanel = new JPanel(new BorderLayout());
 		outerPanel.add(getInputPanel(), BorderLayout.CENTER);
@@ -135,7 +135,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 		textArea.setEditable(false);
 
 		JScrollPane scrollPane = new JScrollPane(textArea);
-		textPanel.add(scrollPane);	
+		textPanel.add(scrollPane);
 
 		return textPanel;
 	}
@@ -149,6 +149,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 		inputPanel.setBorder(CREATE_EMPTY_BORDER);
 		textField = new JTextField();
 		inputPanel.add(textField);
+
 		return inputPanel;
 	}
 
@@ -179,6 +180,10 @@ public class GUI extends JFrame implements ActionListener, UI {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		if (textField.getText().isEmpty() && joinButton.isEnabled()) {
+			JOptionPane.showMessageDialog(frame, "Enter username to continue");
+			return;
+		}
 
 		if (e.getSource() == joinButton) {
 			setUsername(textField.getText());
@@ -189,7 +194,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 			textArea.append("\nConnecting to chat...\n");
 
 			helper.rmiSetup(this);
-			setActiveUsers();		
+			setActiveUsers();
 		}
 
 		refreshActiveUsers();
@@ -205,10 +210,9 @@ public class GUI extends JFrame implements ActionListener, UI {
 		}
 		if (e.getSource() == pmButton) {	
 			List<String> selectedRecipients = list.getSelectedValuesList();
-
 			for (String receiver : selectedRecipients) {
 				try {
-					helper.directMessage(receiver, message);
+					helper.directMessage(receiver, "\nNew private message from " + message);
 					displayMessage(message);
 				} catch (RemoteException e1) {
 					e1.printStackTrace();
@@ -218,28 +222,33 @@ public class GUI extends JFrame implements ActionListener, UI {
 		}
 	}
 
+	/**
+	 * listener method which invokes setActiveUsers upon update to textArea
+	 */
 	private void refreshActiveUsers() {
 		DocumentListener dl = new DocumentListener() {
 			@Override
-			public void changedUpdate(DocumentEvent arg0) {
+			public void changedUpdate(DocumentEvent event) {
 				setActiveUsers();
 			}
 
 			@Override
-			public void insertUpdate(DocumentEvent arg0) {
+			public void insertUpdate(DocumentEvent event) {
 				setActiveUsers();
 			}
 
 			@Override
-			public void removeUpdate(DocumentEvent arg0) {
+			public void removeUpdate(DocumentEvent event) {
 				setActiveUsers();
 			}
 		};
 		textArea.getDocument().addDocumentListener(dl);
 	}
 
+	/**
+	 * method to update list of active users if list size changes
+	 */
 	private void setActiveUsers() {
-
 		try {
 			registeredUsers = helper.getRegisteredUsers();
 			if (listModel.size() == registeredUsers.size()) {
@@ -255,7 +264,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 			e.printStackTrace();
 		}
 
-		if (listModel.size()>1) {
+		if (listModel.size() > 1) {
 			pmButton.setEnabled(true);
 		}else {
 			pmButton.setEnabled(false);

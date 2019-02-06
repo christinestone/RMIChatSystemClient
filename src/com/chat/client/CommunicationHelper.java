@@ -26,7 +26,7 @@ public class CommunicationHelper {
 	public ArrayList<String> getRegisteredUsers() throws RemoteException {
 		return server.listUsers();
 	}
-	
+
 	public void removeRegisteredUser(String clientName) throws RemoteException {
 		server.updateUsersList(clientName);
 	}

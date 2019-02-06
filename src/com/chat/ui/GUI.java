@@ -11,7 +11,6 @@ import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
@@ -35,7 +34,6 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private static final long serialVersionUID = 1L;
 	private static final Border CREATE_EMPTY_BORDER = BorderFactory.createEmptyBorder(10,10,10,10);
 
-	private static DefaultListModel<String> listModel;
 	private JFrame frame;
 	private JTextField textField;
 	private JTextArea textArea;
@@ -43,11 +41,11 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private JButton joinButton, sendButton, pmButton;
 	private String username, message;
 	private static JList<String> list;
+	private DefaultListModel<String> listModel;
 
 	static ArrayList<String> registeredUsers;
 
 	CommunicationHelper helper;
-	Logger logger;
 
 	/**
 	 * Create the application.
@@ -64,12 +62,11 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private void initialize() {
 		frame = new JFrame();
 		frame.setSize(400, 400);
-		frame.addWindowListener(new WindowAdapter()
-		{
+		frame.addWindowListener(new WindowAdapter() {
 			@Override
-			public void windowClosing(WindowEvent e)
-			{
+			public void windowClosing(WindowEvent e) {
 				try {
+					helper.removeRegisteredUser(username);
 					helper.publishMessageToServer(username + " left the conversation.");
 					e.getWindow().dispose();
 				} catch (RemoteException e1) {
@@ -163,6 +160,11 @@ public class GUI extends JFrame implements ActionListener, UI {
 		buttonPanel = new JPanel(new GridLayout(4,1));
 		buttonPanel.setBorder(CREATE_EMPTY_BORDER);
 
+		pmButton = new JButton("Private Message");
+		pmButton.addActionListener(this);
+		pmButton.setEnabled(false);	
+		buttonPanel.add(pmButton);
+
 		joinButton = new JButton("Join");
 		joinButton.addActionListener(this);
 		buttonPanel.add(joinButton);
@@ -171,11 +173,6 @@ public class GUI extends JFrame implements ActionListener, UI {
 		sendButton.addActionListener(this);
 		sendButton.setEnabled(false);
 		buttonPanel.add(sendButton);
-
-		pmButton = new JButton("Private Message");
-		pmButton.addActionListener(this);
-		pmButton.setEnabled(false);	
-		buttonPanel.add(pmButton);
 
 		return buttonPanel;
 	}
@@ -241,23 +238,27 @@ public class GUI extends JFrame implements ActionListener, UI {
 		textArea.getDocument().addDocumentListener(dl);
 	}
 
-	private void setActiveUsers() {	
+	private void setActiveUsers() {
+
 		try {
 			registeredUsers = helper.getRegisteredUsers();
-			if(listModel.size() == registeredUsers.size()) {
+			if (listModel.size() == registeredUsers.size()) {
 				return;
 			}
-			for(String user: registeredUsers) {
-				if(!listModel.contains(user)){
+			else {	
+				listModel.removeAllElements();
+				for (String user: registeredUsers) {
 					listModel.addElement(user);
 				}
 			}
-			if (listModel.size()>1) {
-				pmButton.setEnabled(true);
-			}
-
 		} catch (RemoteException e) {
 			e.printStackTrace();
+		}
+
+		if (listModel.size()>1) {
+			pmButton.setEnabled(true);
+		}else {
+			pmButton.setEnabled(false);
 		}
 	}
 

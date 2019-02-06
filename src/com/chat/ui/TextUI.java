@@ -36,12 +36,11 @@ public class TextUI implements UI {
 		while (true) {
 			System.out.print(name + ": ");
 			message = sc.nextLine().trim();
-
 			try {
 				if (message.equalsIgnoreCase("Menu")) {
 					displayMenu();
 				}
-				helper.sendMessageToServer(name, message);
+				helper.publishMessageToServer(name, message);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -58,7 +57,9 @@ public class TextUI implements UI {
 		int option = sc.nextInt();
 		switch (option) {
 			case 1:
-				helper.getListOfRegisteredUsers();
+				System.out.println("Registered Users:");
+				System.out.println(helper.getActiveUsers().toString());
+				System.out.println("\n");
 				break;
 			case 2:
 				/*
@@ -75,8 +76,8 @@ public class TextUI implements UI {
 	}
 
 	public void privateMessage() throws RemoteException {
-		helper.getListOfRegisteredUsers();
-		System.out.print("Select user to private message: ");
+		System.out.print("Private message user from the following list. Select recipient: ");
+		helper.getActiveUsers();
 		String pmUser = sc.next();
 		System.out.print("Type message: ");
 		String message = sc.nextLine();

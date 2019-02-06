@@ -40,7 +40,7 @@ public class TextUI implements UI {
 				if (message.equalsIgnoreCase("Menu")) {
 					displayMenu();
 				}
-				helper.publishMessageToServer(name, message);
+				helper.publishMessageToServer(name+ ": "+ message);
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -58,7 +58,7 @@ public class TextUI implements UI {
 		switch (option) {
 			case 1:
 				System.out.println("Registered Users:");
-				System.out.println(helper.getActiveUsers().toString());
+				System.out.println(helper.getRegisteredUsers().toString());
 				System.out.println("\n");
 				break;
 			case 2:
@@ -77,7 +77,7 @@ public class TextUI implements UI {
 
 	public void privateMessage() throws RemoteException {
 		System.out.print("Private message user from the following list. Select recipient: ");
-		helper.getActiveUsers();
+		helper.getRegisteredUsers();
 		String pmUser = sc.next();
 		System.out.print("Type message: ");
 		String message = sc.nextLine();

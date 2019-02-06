@@ -6,8 +6,11 @@ import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -42,6 +45,8 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private String username, message;
 	private static JList<String> list;
 
+	static ArrayList<String> registeredUsers;
+
 	CommunicationHelper helper;
 	Logger logger;
 
@@ -59,8 +64,21 @@ public class GUI extends JFrame implements ActionListener, UI {
 	 */
 	private void initialize() {
 		frame = new JFrame();
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(400, 400);
+		frame.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosing(WindowEvent e)
+            {
+            	try {
+					helper.publishMessageToServer(username + " left the conversation.");
+					e.getWindow().dispose();
+				} catch (RemoteException e1) {
+					e1.printStackTrace();
+				}     
+            }
+        });
+		
 
 		JPanel outerPanel = new JPanel(new BorderLayout());
 		outerPanel.add(getInputPanel(), BorderLayout.CENTER);
@@ -78,7 +96,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 	}
 
 	/**
-	 * builds JPanel for list of active users 
+	 * builds JPanel for users
 	 * @return userPanel
 	 */
 	private JPanel getUsersPanel() {
@@ -93,7 +111,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 	}
 
 	/**
-	 * builds JPanel to display list of active users 
+	 * builds JPanel to display list of registered users 
 	 * @return clientPanel
 	 */
 	private void getClientPanel() {
@@ -108,7 +126,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 	}
 
 	/**
-	 * builds JPanel to display chat text 
+	 * builds JPanel to display conversation text 
 	 * @return textPanel
 	 */
 	private JPanel getTextPanel() {	
@@ -165,32 +183,34 @@ public class GUI extends JFrame implements ActionListener, UI {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+	
 		if (e.getSource() == joinButton) {
 			setUsername(textField.getText());
 			textField.setText("");
 			joinButton.setEnabled(false);
 			sendButton.setEnabled(true);
 			frame.setTitle(username);
-			textArea.append("Connecting to chat...\n");
-
+			textArea.append("\nConnecting to chat...\n");
+			
 			helper.rmiSetup(this);
+			setActiveUsers();		
 		}
-		
+
 		refreshActiveUsers();
-		
+		message = username + ": " + textField.getText();
+
 		if (e.getSource() == sendButton) {
-			message = textField.getText();
 			textField.setText("");
 			try {
-				helper.publishMessageToServer(username, message);
+				helper.publishMessageToServer(message);
 			} catch (RemoteException e1) {
 				e1.printStackTrace();
 			}
 		}
 		if (e.getSource() == pmButton) {	
 			List<String> selectedRecipients = list.getSelectedValuesList();
+			
 			for (String receiver : selectedRecipients) {
-				message = username + ": " + textField.getText();
 				try {
 					helper.directMessage(receiver, message);
 					displayMessage(message);
@@ -223,22 +243,23 @@ public class GUI extends JFrame implements ActionListener, UI {
 	}
 
 	private void setActiveUsers() {	
-			try {
-				ArrayList<String> activeUsers = helper.getActiveUsers();
-				if(listModel.size() == activeUsers.size()) {
-					return;
-				}
-				for(String user: activeUsers) {
-					if(!listModel.contains(user)){
-						listModel.addElement(user);
+				try {
+					registeredUsers = helper.getRegisteredUsers();
+					if(listModel.size() == registeredUsers.size()) {
+						return;
 					}
+					for(String user: registeredUsers) {
+						if(!listModel.contains(user)){
+							listModel.addElement(user);
+						}
+					}
+					if (listModel.size()>1) {
+						pmButton.setEnabled(true);
+					}
+					
+				} catch (RemoteException e) {
+					e.printStackTrace();
 				}
-				if (listModel.size()>1) {
-					pmButton.setEnabled(true);
-				}
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
 	}
 
 	@Override

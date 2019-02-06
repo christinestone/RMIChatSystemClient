@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.Scanner;
 
 import com.chat.ui.GUI;
-import com.chat.ui.TextUI;
 
 public class ChatClientDriver {
 	static Scanner sc = new Scanner(System.in);

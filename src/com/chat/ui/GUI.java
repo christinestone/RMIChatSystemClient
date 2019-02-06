@@ -7,30 +7,40 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 import javax.swing.BorderFactory;
+import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 import com.chat.client.CommunicationHelper;
 
 public class GUI extends JFrame implements ActionListener, UI {
 	private static final long serialVersionUID = 1L;
 	private static final Border CREATE_EMPTY_BORDER = BorderFactory.createEmptyBorder(10,10,10,10);
+
+	private static DefaultListModel<String> listModel;
 	private JFrame frame;
 	private JTextField textField;
 	private JTextArea textArea;
 	private JPanel userPanel, inputPanel, textPanel, buttonPanel;
 	private JButton joinButton, sendButton, pmButton;
 	private String username, message;
+	private static JList<String> list;
 
 	CommunicationHelper helper;
 	Logger logger;
@@ -48,7 +58,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 	 * Initialize the contents of the frame.
 	 */
 	private void initialize() {
-		frame = new JFrame("Chat Console");
+		frame = new JFrame();
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.setSize(400, 400);
 
@@ -78,8 +88,23 @@ public class GUI extends JFrame implements ActionListener, UI {
 		userPanel.add(usersLabel, BorderLayout.NORTH);
 		userPanel.setBorder(CREATE_EMPTY_BORDER);
 		userPanel.add(getButtonPanel(), BorderLayout.SOUTH);
-		//getClientPanel();
+		getClientPanel();
 		return userPanel;
+	}
+
+	/**
+	 * builds JPanel to display list of active users 
+	 * @return clientPanel
+	 */
+	private void getClientPanel() {
+		JPanel clientPanel = new JPanel(new BorderLayout());
+		listModel = new DefaultListModel<String>();
+		list = new JList<String>(listModel);
+		list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+
+		JScrollPane listScrollPane = new JScrollPane(list);
+		clientPanel.add(listScrollPane, BorderLayout.CENTER);
+		userPanel.add(clientPanel, BorderLayout.CENTER);
 	}
 
 	/**
@@ -94,7 +119,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 		textArea.setLineWrap(true);
 		textArea.setWrapStyleWord(true);
 		textArea.setEditable(false);
-
+		
 		JScrollPane scrollPane = new JScrollPane(textArea);
 		textPanel.add(scrollPane);	
 
@@ -145,27 +170,75 @@ public class GUI extends JFrame implements ActionListener, UI {
 			textField.setText("");
 			joinButton.setEnabled(false);
 			sendButton.setEnabled(true);
-			frame.setTitle(username + "'s Console ");
-			textArea.append("\n" + username + " connecting to chat...\n");
+			frame.setTitle(username);
+			textArea.append("Connecting to chat...\n");
 
 			helper.rmiSetup(this);
 		}
+		
+		refreshActiveUsers();
+		
 		if (e.getSource() == sendButton) {
 			message = textField.getText();
 			textField.setText("");
 			try {
-				helper.sendMessageToServer(username, message);
+				helper.publishMessageToServer(username, message);
 			} catch (RemoteException e1) {
 				e1.printStackTrace();
 			}
 		}
-		if (e.getSource() == pmButton) {
-			message = textField.getText();
+		if (e.getSource() == pmButton) {	
+			List<String> selectedRecipients = list.getSelectedValuesList();
+			for (String receiver : selectedRecipients) {
+				message = username + ": " + textField.getText();
+				try {
+					helper.directMessage(receiver, message);
+					displayMessage(message);
+				} catch (RemoteException e1) {
+					e1.printStackTrace();
+				}
+			}
 			textField.setText("");
-			/*
-			 * TO DO
-			 */
 		}
+	}
+
+	private void refreshActiveUsers() {
+		DocumentListener dl = new DocumentListener() {
+			@Override
+			public void changedUpdate(DocumentEvent arg0) {
+				setActiveUsers();
+			}
+			
+			@Override
+			public void insertUpdate(DocumentEvent arg0) {
+				setActiveUsers();
+			}
+
+			@Override
+			public void removeUpdate(DocumentEvent arg0) {
+				setActiveUsers();
+				}
+		    };
+		textArea.getDocument().addDocumentListener(dl);
+	}
+
+	private void setActiveUsers() {	
+			try {
+				ArrayList<String> activeUsers = helper.getActiveUsers();
+				if(listModel.size() == activeUsers.size()) {
+					return;
+				}
+				for(String user: activeUsers) {
+					if(!listModel.contains(user)){
+						listModel.addElement(user);
+					}
+				}
+				if (listModel.size()>1) {
+					pmButton.setEnabled(true);
+				}
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
 	}
 
 	@Override
@@ -176,14 +249,10 @@ public class GUI extends JFrame implements ActionListener, UI {
 	@Override
 	public String getUsername() {
 		if (username.length() == 0) {
-			checkUsername();
+			JOptionPane.showMessageDialog(frame, "Enter Name");
+			username = JOptionPane.showInputDialog("name");
 		}
 		return username;
-	}
-
-	private void checkUsername() {
-		JOptionPane.showMessageDialog(frame, "Enter your name to Start");
-		username = JOptionPane.showInputDialog("name");
 	}
 
 	private void setUsername(String username) {

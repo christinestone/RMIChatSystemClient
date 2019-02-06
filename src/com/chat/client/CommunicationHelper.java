@@ -15,15 +15,15 @@ public class CommunicationHelper {
 
 	ChatServer server;
 
-	public void publishMessageToServer(String clientName, String message) throws RemoteException {
-		server.broadcast(clientName + ": " + message);
+	public void publishMessageToServer(String message) throws RemoteException {
+		server.broadcast(message);
 	}
 
 	public void directMessage(String recepientName, String message) throws RemoteException {
 		server.privateMessage(recepientName, message);
 	}
 
-	public ArrayList<String> getActiveUsers() throws RemoteException {
+	public ArrayList<String> getRegisteredUsers() throws RemoteException {
 		return server.listUsers();
 	}
 

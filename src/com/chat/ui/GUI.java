@@ -62,6 +62,7 @@ public class GUI extends JFrame implements ActionListener, UI {
 	private void initialize() {
 		frame = new JFrame();
 		frame.setSize(400, 400);
+
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
@@ -72,9 +73,8 @@ public class GUI extends JFrame implements ActionListener, UI {
 				} catch (RemoteException e1) {
 					e1.printStackTrace();
 				}     
-			}
-		});
-
+            }
+        });
 
 		JPanel outerPanel = new JPanel(new BorderLayout());
 		outerPanel.add(getInputPanel(), BorderLayout.CENTER);
@@ -205,7 +205,6 @@ public class GUI extends JFrame implements ActionListener, UI {
 		}
 		if (e.getSource() == pmButton) {	
 			List<String> selectedRecipients = list.getSelectedValuesList();
-
 			for (String receiver : selectedRecipients) {
 				try {
 					helper.directMessage(receiver, message);

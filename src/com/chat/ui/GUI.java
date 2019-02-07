@@ -73,8 +73,8 @@ public class GUI extends JFrame implements ActionListener, UI {
 				} catch (RemoteException e1) {
 					e1.printStackTrace();
 				}     
-			}
-		});
+            }
+        });
 
 		JPanel outerPanel = new JPanel(new BorderLayout());
 		outerPanel.add(getInputPanel(), BorderLayout.CENTER);
